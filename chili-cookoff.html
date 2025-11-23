@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌶️ Chili Cookoff Voting</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .leaderboard {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .leaderboard h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            text-align: center;
+        }
+
+        .winner-banner {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .chili-result {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s;
+        }
+
+        .chili-result:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .chili-name {
+            font-weight: 600;
+            font-size: 1.2em;
+            color: #333;
+        }
+
+        .chili-votes {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .vote-count {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .vote-bar {
+            width: 100px;
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .vote-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+        }
+
+        .voting-section {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .voting-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.5em;
+        }
+
+        .chili-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .chili-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 30px 20px;
+            font-size: 1.3em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .chili-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .chili-button:active {
+            transform: translateY(-2px);
+        }
+
+        .chili-button.voted {
+            background: #28a745;
+            cursor: default;
+        }
+
+        .voted-message {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            color: #155724;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: 600;
+            display: none;
+        }
+
+        .voted-message.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .total-votes {
+            text-align: center;
+            margin-top: 15px;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .reset-button {
+            display: block;
+            width: 100%;
+            margin-top: 15px;
+            padding: 12px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .reset-button:hover {
+            background: #5a6268;
+        }
+
+        .admin-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(108, 117, 125, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.5em;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+
+        .admin-toggle:hover {
+            background: rgba(90, 98, 104, 0.9);
+        }
+
+        .admin-panel {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .admin-panel.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .admin-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .admin-header h2 {
+            color: #667eea;
+            margin: 0;
+        }
+
+        .close-admin {
+            background: none;
+            border: none;
+            font-size: 2em;
+            cursor: pointer;
+            color: #6c757d;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            line-height: 1;
+        }
+
+        .close-admin:hover {
+            color: #333;
+        }
+
+        .admin-login {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .admin-input {
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1em;
+        }
+
+        .admin-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .admin-button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .admin-button:hover {
+            opacity: 0.9;
+        }
+
+        .admin-button.danger {
+            background: #dc3545;
+        }
+
+        .admin-button.danger:hover {
+            background: #c82333;
+        }
+
+        .admin-controls {
+            display: none;
+        }
+
+        .admin-controls.show {
+            display: block;
+        }
+
+        .vote-adjuster {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .vote-adjuster-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .vote-adjuster-header h3 {
+            margin: 0;
+            font-size: 1.1em;
+        }
+
+        .vote-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .vote-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            background: #667eea;
+            color: white;
+            font-size: 1.3em;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .vote-btn:hover {
+            background: #5568d3;
+        }
+
+        .vote-input {
+            width: 70px;
+            padding: 8px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+
+        .admin-section {
+            margin-bottom: 25px;
+            padding-bottom: 25px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .admin-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .admin-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .error-message {
+            color: #dc3545;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 500px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .chili-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .vote-bar {
+                width: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌶️ Chili Cookoff 🌶️</h1>
+            <p>Vote for your favorite!</p>
+        </div>
+
+        <div class="leaderboard">
+            <h2>🏆 Leaderboard</h2>
+            <div id="winnerBanner" class="winner-banner" style="display: none;"></div>
+            <div id="leaderboardResults"></div>
+            <div class="total-votes" id="totalVotes">Total Votes: 0</div>
+        </div>
+
+        <div class="voting-section">
+            <h2>Cast Your Vote</h2>
+            <div id="votingArea">
+                <div class="chili-buttons">
+                    <button class="chili-button" onclick="vote(1)">
+                        🌶️<br>Chili #1
+                    </button>
+                    <button class="chili-button" onclick="vote(2)">
+                        🌶️<br>Chili #2
+                    </button>
+                    <button class="chili-button" onclick="vote(3)">
+                        🌶️<br>Chili #3
+                    </button>
+                    <button class="chili-button" onclick="vote(4)">
+                        🌶️<br>Chili #4
+                    </button>
+                </div>
+                <button class="reset-button" onclick="resetMyVote()">Reset My Vote</button>
+            </div>
+            <div id="votedMessage" class="voted-message">
+                ✅ Thanks for voting! Check the leaderboard above.
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Toggle Button -->
+    <button class="admin-toggle" onclick="toggleAdmin()" title="Admin Panel">⚙️</button>
+
+    <!-- Admin Panel -->
+    <div id="adminPanel" class="admin-panel">
+        <div class="admin-content">
+            <div class="admin-header">
+                <h2>🔐 Admin Panel</h2>
+                <button class="close-admin" onclick="closeAdmin()">×</button>
+            </div>
+
+            <!-- Login Form -->
+            <div id="adminLogin" class="admin-login">
+                <input 
+                    type="password" 
+                    id="adminPassword" 
+                    class="admin-input" 
+                    placeholder="Enter admin password"
+                    onkeypress="if(event.key === 'Enter') adminLogin()"
+                >
+                <button class="admin-button" onclick="adminLogin()">Login</button>
+                <div id="loginError" class="error-message" style="display: none;"></div>
+            </div>
+
+            <!-- Admin Controls (hidden until login) -->
+            <div id="adminControls" class="admin-controls">
+                <div class="admin-section">
+                    <h3>📊 Adjust Vote Counts</h3>
+                    <div id="voteAdjusters"></div>
+                </div>
+
+                <div class="admin-section">
+                    <h3>🔄 Reset Options</h3>
+                    <button class="admin-button danger" onclick="resetAllVotes()" style="width: 100%; margin-bottom: 10px;">
+                        Reset All Votes to Zero
+                    </button>
+                    <button class="admin-button" onclick="clearAllUserVotes()" style="width: 100%;">
+                        Clear "Already Voted" for All Users
+                    </button>
+                </div>
+
+                <div class="admin-section">
+                    <h3>🔒 Change Password</h3>
+                    <input 
+                        type="password" 
+                        id="newPassword" 
+                        class="admin-input" 
+                        placeholder="New password"
+                        style="margin-bottom: 10px;"
+                    >
+                    <button class="admin-button" onclick="changePassword()" style="width: 100%;">
+                        Update Password
+                    </button>
+                </div>
+
+                <button class="admin-button" onclick="adminLogout()" style="width: 100%; margin-top: 15px; background: #6c757d;">
+                    Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize votes from localStorage
+        const STORAGE_KEY = 'chiliVotes';
+        const VOTED_KEY = 'hasVoted';
+        const ADMIN_PASSWORD_KEY = 'adminPassword';
+        const ADMIN_SESSION_KEY = 'adminLoggedIn';
+        const DEFAULT_PASSWORD = 'chili2024';
+        
+        function getVotes() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            return stored ? JSON.parse(stored) : { 1: 0, 2: 0, 3: 0, 4: 0 };
+        }
+
+        function saveVotes(votes) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(votes));
+        }
+
+        function hasVoted() {
+            return localStorage.getItem(VOTED_KEY) === 'true';
+        }
+
+        function setVoted() {
+            localStorage.setItem(VOTED_KEY, 'true');
+        }
+
+        function clearVoted() {
+            localStorage.removeItem(VOTED_KEY);
+        }
+
+        function vote(chiliNumber) {
+            if (hasVoted()) {
+                alert('You\'ve already voted! Use "Reset My Vote" to change your vote.');
+                return;
+            }
+
+            const votes = getVotes();
+            votes[chiliNumber]++;
+            saveVotes(votes);
+            setVoted();
+
+            // Hide voting buttons, show thank you message
+            document.getElementById('votingArea').style.display = 'none';
+            document.getElementById('votedMessage').classList.add('show');
+
+            updateLeaderboard();
+        }
+
+        function resetMyVote() {
+            if (!hasVoted()) {
+                alert('You haven\'t voted yet!');
+                return;
+            }
+
+            if (confirm('This will allow you to change your vote. Your previous vote will be removed. Continue?')) {
+                clearVoted();
+                document.getElementById('votingArea').style.display = 'block';
+                document.getElementById('votedMessage').classList.remove('show');
+            }
+        }
+
+        function updateLeaderboard() {
+            const votes = getVotes();
+            const totalVotes = Object.values(votes).reduce((a, b) => a + b, 0);
+            
+            // Sort chilis by votes
+            const sorted = Object.entries(votes)
+                .map(([num, count]) => ({ num: parseInt(num), count }))
+                .sort((a, b) => b.count - a.count);
+
+            // Update winner banner
+            const winnerBanner = document.getElementById('winnerBanner');
+            if (totalVotes > 0) {
+                const winner = sorted[0];
+                const isTie = sorted.filter(c => c.count === winner.count).length > 1;
+                
+                if (isTie) {
+                    const tiedChilis = sorted.filter(c => c.count === winner.count)
+                        .map(c => `#${c.num}`).join(', ');
+                    winnerBanner.innerHTML = `🔥 Tied for 1st: Chili ${tiedChilis} (${winner.count} votes)`;
+                } else {
+                    winnerBanner.innerHTML = `🔥 Leading: Chili #${winner.num} (${winner.count} votes)`;
+                }
+                winnerBanner.style.display = 'block';
+            } else {
+                winnerBanner.style.display = 'none';
+            }
+
+            // Update leaderboard
+            const maxVotes = Math.max(...Object.values(votes), 1);
+            const resultsHTML = sorted.map(({ num, count }) => {
+                const percentage = maxVotes > 0 ? (count / maxVotes) * 100 : 0;
+                return `
+                    <div class="chili-result">
+                        <span class="chili-name">🌶️ Chili #${num}</span>
+                        <div class="chili-votes">
+                            <div class="vote-bar">
+                                <div class="vote-bar-fill" style="width: ${percentage}%"></div>
+                            </div>
+                            <span class="vote-count">${count}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('leaderboardResults').innerHTML = resultsHTML;
+            document.getElementById('totalVotes').textContent = `Total Votes: ${totalVotes}`;
+        }
+
+        // Initialize on page load
+        window.onload = function() {
+            if (hasVoted()) {
+                document.getElementById('votingArea').style.display = 'none';
+                document.getElementById('votedMessage').classList.add('show');
+            }
+            updateLeaderboard();
+            
+            // Auto-refresh leaderboard every 3 seconds
+            setInterval(updateLeaderboard, 3000);
+        };
+
+        // ========== ADMIN FUNCTIONS ==========
+
+        function getAdminPassword() {
+            const stored = localStorage.getItem(ADMIN_PASSWORD_KEY);
+            return stored || DEFAULT_PASSWORD;
+        }
+
+        function setAdminPassword(password) {
+            localStorage.setItem(ADMIN_PASSWORD_KEY, password);
+        }
+
+        function isAdminLoggedIn() {
+            return sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true';
+        }
+
+        function setAdminSession(loggedIn) {
+            if (loggedIn) {
+                sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
+            } else {
+                sessionStorage.removeItem(ADMIN_SESSION_KEY);
+            }
+        }
+
+        function toggleAdmin() {
+            const panel = document.getElementById('adminPanel');
+            panel.classList.add('show');
+            
+            // Check if already logged in
+            if (isAdminLoggedIn()) {
+                showAdminControls();
+            }
+        }
+
+        function closeAdmin() {
+            document.getElementById('adminPanel').classList.remove('show');
+        }
+
+        function adminLogin() {
+            const password = document.getElementById('adminPassword').value;
+            const errorDiv = document.getElementById('loginError');
+            
+            if (password === getAdminPassword()) {
+                setAdminSession(true);
+                showAdminControls();
+                errorDiv.style.display = 'none';
+            } else {
+                errorDiv.textContent = 'Incorrect password';
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        function adminLogout() {
+            setAdminSession(false);
+            document.getElementById('adminLogin').style.display = 'flex';
+            document.getElementById('adminControls').classList.remove('show');
+            document.getElementById('adminPassword').value = '';
+            closeAdmin();
+        }
+
+        function showAdminControls() {
+            document.getElementById('adminLogin').style.display = 'none';
+            document.getElementById('adminControls').classList.add('show');
+            updateVoteAdjusters();
+        }
+
+        function updateVoteAdjusters() {
+            const votes = getVotes();
+            const adjustersHTML = Object.entries(votes)
+                .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+                .map(([num, count]) => `
+                    <div class="vote-adjuster">
+                        <div class="vote-adjuster-header">
+                            <h3>🌶️ Chili #${num}</h3>
+                        </div>
+                        <div class="vote-controls">
+                            <button class="vote-btn" onclick="adjustVote(${num}, -1)">−</button>
+                            <input 
+                                type="number" 
+                                class="vote-input" 
+                                id="vote-${num}" 
+                                value="${count}"
+                                onchange="setVote(${num}, this.value)"
+                                min="0"
+                            >
+                            <button class="vote-btn" onclick="adjustVote(${num}, 1)">+</button>
+                        </div>
+                    </div>
+                `).join('');
+            
+            document.getElementById('voteAdjusters').innerHTML = adjustersHTML;
+        }
+
+        function adjustVote(chiliNum, change) {
+            const votes = getVotes();
+            votes[chiliNum] = Math.max(0, votes[chiliNum] + change);
+            saveVotes(votes);
+            updateVoteAdjusters();
+            updateLeaderboard();
+        }
+
+        function setVote(chiliNum, value) {
+            const votes = getVotes();
+            votes[chiliNum] = Math.max(0, parseInt(value) || 0);
+            saveVotes(votes);
+            updateVoteAdjusters();
+            updateLeaderboard();
+        }
+
+        function resetAllVotes() {
+            if (confirm('Are you sure you want to reset ALL votes to zero? This cannot be undone!')) {
+                const votes = { 1: 0, 2: 0, 3: 0, 4: 0 };
+                saveVotes(votes);
+                updateVoteAdjusters();
+                updateLeaderboard();
+                alert('All votes have been reset to zero.');
+            }
+        }
+
+        function clearAllUserVotes() {
+            if (confirm('This will allow all users to vote again. Continue?')) {
+                // Note: This only clears the current device's vote status
+                // Each user's device stores their own vote status locally
+                clearVoted();
+                alert('Vote restriction cleared for this device. Each user must clear their own browser data to vote again.');
+            }
+        }
+
+        function changePassword() {
+            const newPassword = document.getElementById('newPassword').value;
+            
+            if (!newPassword || newPassword.length < 4) {
+                alert('Password must be at least 4 characters long.');
+                return;
+            }
+
+            if (confirm('Change admin password? You will need the new password to access admin panel.')) {
+                setAdminPassword(newPassword);
+                document.getElementById('newPassword').value = '';
+                alert('Password updated successfully!');
+            }
+        }
+
+        // Close admin panel when clicking outside
+        document.getElementById('adminPanel').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAdmin();
+            }
+        });
+    </script>
+</body>
+</html>
